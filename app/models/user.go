@@ -9,14 +9,14 @@ import (
 )
 
 type User struct {
-	ID             int
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	Username       string `json:"username"`
-	Email          string `json:"email"`
-	Bio            string `json:"bio"`
-	Image          string `json:"image"`
-	HashedPassword []byte `json:"-"`
+	ID             int       `json:"-"`
+	CreatedAt      time.Time `json:"-"`
+	UpdatedAt      time.Time `json:"-"`
+	Username       string    `json:"username"`
+	Email          string    `json:"email"`
+	Bio            string    `json:"bio"`
+	Image          string    `json:"image"`
+	HashedPassword []byte    `json:"-"`
 
 	// Transient
 	Token    string `json:"token,omitempty"`

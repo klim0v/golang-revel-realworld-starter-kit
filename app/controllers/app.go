@@ -11,7 +11,6 @@ import (
 const (
 	currentUserKey    = "current_user"
 	fetchedArticleKey = "article"
-	claimKey          = "claim"
 )
 
 type ApplicationController struct {
@@ -47,10 +46,7 @@ func (c *ApplicationController) currentUser() *models.User {
 	claims, _ := c.JWT.CheckRequest(c.Request)
 
 	if claims != nil {
-		c.Args[claimKey] = claims
-
 		user := c.FindUserByUsername(claims.Username)
-		revel.INFO.Println(claims)
 		//todo: user.Token =
 		return user
 	}

@@ -6,7 +6,7 @@
 ### [Demo](https://github.com/gothinkster/realworld)&nbsp;&nbsp;&nbsp;&nbsp;[RealWorld](https://github.com/gothinkster/realworld)
 
 
-This codebase was created to demonstrate a fully fledged fullstack application built with **[YOUR_FRAMEWORK]** including CRUD operations, authentication, routing, pagination, and more.
+This codebase was created to demonstrate a fully fledged fullstack application built with **Golang + Revel** including CRUD operations, authentication, routing, pagination, and more.
 
 We've gone to great lengths to adhere to the **Golang + Revel** community styleguides & best practices.
 
@@ -24,7 +24,7 @@ For more information on how to this works with other frontends/backends, head ov
 3. Copy `.env.docker` to `.env` in the project root
 4. Start [nginx-proxy](https://github.com/jwilder/nginx-proxy)
 5. Generate a Docker bundle from the Compose file `docker-compose build`
-6. Create and start containers with demon mode `docker-compose up`
+6. Create and start containers `docker-compose up`
 
 * To start the **nginx-proxy**, type the following command:
 

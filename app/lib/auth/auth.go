@@ -28,6 +28,8 @@ func NewClaims(claims jwt.StandardClaims, username string) *Claims {
 type Tokener interface {
 	NewToken(string) string
 	CheckRequest(*revel.Request) (*Claims, error)
+	GetClaims(token string) (*Claims, error)
+	GetToken(r *revel.Request) (string, error)
 }
 
 // JWT holds the standard claims and has method
@@ -80,17 +82,26 @@ func validateToken(tokenString string) (*Claims, error) {
 
 // CheckRequest ensures that the JWT provided in the header of
 // the request is valid, and then returns claims
-func (JWT) CheckRequest(r *revel.Request) (*Claims, error) {
-	auth := r.Header.Get("Authorization")
-	if auth == "" {
-		return nil, fmt.Errorf("Authorization header is empty")
+func (j JWT) CheckRequest(r *revel.Request) (*Claims, error) {
+	token, err := j.GetToken(r)
+	if err != nil {
+		return nil, err
 	}
-
-	token := strings.TrimPrefix(auth, "Token ")
-
+	return j.GetClaims(token)
+}
+func (JWT) GetClaims(token string) (*Claims, error) {
 	claims, err := validateToken(token)
 	if err != nil {
 		return nil, err
 	}
 	return claims, nil
+}
+func (JWT) GetToken(r *revel.Request) (string, error) {
+	auth := r.Header.Get("Authorization")
+	if auth == "" {
+		return "", fmt.Errorf("Authorization header is empty")
+	}
+
+	token := strings.TrimPrefix(auth, "Token ")
+	return token, nil
 }

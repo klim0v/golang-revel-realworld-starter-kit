@@ -41,16 +41,15 @@ func (c *ApplicationController) AddUser() revel.Result {
 }
 
 func (c *ApplicationController) currentUser() *models.User {
-	var user = &models.User{}
-
-	claims, _ := c.JWT.CheckRequest(c.Request)
-
-	if claims != nil {
-		user := c.FindUserByUsername(claims.Username)
-		//todo: user.Token =
-		return user
+	user := &models.User{}
+	token, err := c.JWT.GetToken(c.Request)
+	if err == nil {
+		claims, err := c.JWT.GetClaims(token)
+		if err == nil {
+			user = c.FindUserByUsername(claims.Username)
+			user.Token = token
+		}
 	}
-
 	return user
 }
 

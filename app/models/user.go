@@ -87,6 +87,7 @@ func (user *User) Fill(userJson User) {
 	user.Email = userJson.Email
 	user.Username = userJson.Username
 	user.Bio = userJson.Bio
+	user.Image = userJson.Image
 	if userJson.Password != "" {
 		user.setPassword(userJson.Password)
 	}

@@ -22,7 +22,7 @@ func (c UserController) Create() revel.Result {
 	err = c.Params.BindJSON(&body)
 
 	if err != nil {
-		c.Response.Status = http.StatusBadRequest
+		c.Response.Status = http.StatusUnprocessableEntity
 		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"BindJSON": {err.Error()}}})
 	}
 
@@ -64,7 +64,7 @@ func (c UserController) Update() revel.Result {
 	err = c.Params.BindJSON(&body)
 
 	if err != nil {
-		c.Response.Status = http.StatusBadRequest
+		c.Response.Status = http.StatusUnprocessableEntity
 		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"BindJSON": {err.Error()}}})
 	}
 
@@ -106,7 +106,7 @@ func (c UserController) Login() revel.Result {
 	err = c.Params.BindJSON(&body)
 
 	if err != nil {
-		c.Response.Status = http.StatusBadRequest
+		c.Response.Status = http.StatusUnprocessableEntity
 		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"BindJSON": {err.Error()}}})
 	}
 
@@ -116,13 +116,13 @@ func (c UserController) Login() revel.Result {
 	user := c.FindUserByEmail(bodyUser.Email)
 	if user == nil {
 		c.Response.Status = http.StatusNotFound
-		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"User": {http.StatusText(http.StatusNotFound)}}})
+		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"email": {"invalid"}}})
 	}
 	revel.TRACE.Println(user)
 	ok := user.MatchPassword(bodyUser.Password)
 	if !ok {
 		c.Response.Status = http.StatusUnprocessableEntity
-		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"User": {http.StatusText(http.StatusUnprocessableEntity)}}})
+		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"password": {"invalid"}}})
 	}
 	res := &UserJSON{
 		models.User{

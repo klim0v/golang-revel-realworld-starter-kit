@@ -47,16 +47,16 @@ func (user *User) Validate(v *revel.Validation) {
 		revel.MaxSize{Max: 15},
 		revel.MinSize{Min: 4},
 		revel.Match{Regexp: userRegex},
-	).Key("user.username")
+	).Key("username")
 
 	v.Check(user.Email,
 		revel.Required{},
 		revel.ValidEmail(),
-	).Key("user.email")
+	).Key("email")
 
 	if user.CreatedAt.IsZero() || user.Password != "" {
 		ValidatePassword(v, user.Password).
-			Key("user.password")
+			Key("password")
 	}
 }
 

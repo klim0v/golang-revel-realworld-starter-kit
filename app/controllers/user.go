@@ -23,6 +23,7 @@ func (c UserController) Create() revel.Result {
 
 	user := models.NewUser(bodyUser.Username, bodyUser.Email, bodyUser.Password)
 	revel.TRACE.Println("User Entity:", user)
+
 	user.Validate(c.Validation)
 
 	usernameUnique := c.FindUserByUsername(bodyUser.Username) == nil
@@ -130,19 +131,10 @@ func (c UserController) Login() revel.Result {
 		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"BindJSON": {err.Error()}}})
 	}
 
-	bodyUser := body.User
-	revel.TRACE.Println("Body:", bodyUser)
-
-	user := c.FindUserByEmail(bodyUser.Email)
-	if user == nil {
-		c.Response.Status = http.StatusNotFound
-		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"email": {"invalid"}}})
-	}
-	revel.TRACE.Println(user)
-	ok := user.MatchPassword(bodyUser.Password)
-	if !ok {
+	user, errs := c.checkValidate(body.User)
+	if errs != nil {
 		c.Response.Status = http.StatusUnprocessableEntity
-		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"password": {"invalid"}}})
+		return c.RenderJSON(errs)
 	}
 	res := &UserJSON{
 		&models.User{
@@ -155,4 +147,26 @@ func (c UserController) Login() revel.Result {
 	}
 
 	return c.RenderJSON(res)
+}
+
+func (c UserController) checkValidate(bodyUser *models.User) (user *models.User, errs *errorJSON) {
+	c.Validation.Required(bodyUser.Email).Key("email")
+	c.Validation.Required(bodyUser.Password).Key("password")
+	if c.Validation.HasErrors() {
+		errs = errs.Build(c.Validation.ErrorMap())
+		return nil, errs
+	}
+
+	user = c.FindUserByEmail(bodyUser.Email)
+	c.Validation.Required(user != nil).Key("email").Message("user not found by email")
+	if c.Validation.HasErrors() {
+		errs = errs.Build(c.Validation.ErrorMap())
+		return nil, errs
+	}
+	c.Validation.Required(user.MatchPassword(bodyUser.Password)).Key("password").Message("invalid")
+	if c.Validation.HasErrors() {
+		errs = errs.Build(c.Validation.ErrorMap())
+		return nil, errs
+	}
+	return user, nil
 }

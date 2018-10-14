@@ -48,12 +48,12 @@ func (user *User) Validate(v *revel.Validation) {
 		revel.MinSize{Min: 4},
 		revel.Match{Regexp: userRegex},
 	).Key("user.username")
-	//todo: check unique
+
 	v.Check(user.Email,
 		revel.Required{},
 		revel.ValidEmail(),
 	).Key("user.email")
-	//todo: check unique
+
 	if user.CreatedAt.IsZero() || user.Password != "" {
 		ValidatePassword(v, user.Password).
 			Key("user.password")
@@ -83,7 +83,7 @@ func (user *User) PreUpdate(s gorp.SqlExecutor) error {
 	user.UpdatedAt = time.Now()
 	return nil
 }
-func (user *User) Fill(userJson User) {
+func (user *User) Fill(userJson *User) {
 	user.Email = userJson.Email
 	user.Username = userJson.Username
 	user.Bio = userJson.Bio

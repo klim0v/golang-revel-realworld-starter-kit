@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	currentUserKey    = "current_user"
-	fetchedArticleKey = "article"
+	currentUserKey = "current_user"
 )
 
 type ApplicationController struct {
@@ -36,21 +35,28 @@ func (c *ApplicationController) Init() revel.Result {
 	return nil
 }
 func (c *ApplicationController) AddUser() revel.Result {
-	c.Args[currentUserKey] = c.currentUser()
+	user := c.currentUser()
+	if user == nil {
+		return c.NotFound("user not found by username")
+	}
+	revel.TRACE.Println(user)
+	c.Args[currentUserKey] = user
 	return nil
 }
 
 func (c *ApplicationController) currentUser() *models.User {
-	user := &models.User{}
 	token, err := c.JWT.GetToken(c.Request)
 	if err == nil {
 		claims, err := c.JWT.GetClaims(token)
 		if err == nil {
-			user = c.FindUserByUsername(claims.Username)
-			user.Token = token
+			user := c.FindUserByUsername(claims.Username)
+			if user != nil {
+				user.Token = token
+				return user
+			}
 		}
 	}
-	return user
+	return &models.User{}
 }
 
 func (c *ApplicationController) FindUserByUsername(username string) *models.User {

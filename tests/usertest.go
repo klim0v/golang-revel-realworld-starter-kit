@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/controllers"
+	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/routes"
 	"net/http"
 )
@@ -47,8 +48,8 @@ type testLogin struct {
 func (t *UserControllerTest) TestLoginSuccessFully() {
 	bodyUser := UserLoginBody{
 		UserLogin{
-			Email:    "newuserreg@example.com",
-			Password: "password",
+			Email:    demoEmail,
+			Password: demoPassword,
 		},
 	}
 
@@ -60,8 +61,8 @@ func (t *UserControllerTest) TestLoginSuccessFully() {
 	var UserJSON = controllers.UserJSON{}
 	json.Unmarshal(t.ResponseBody, &UserJSON)
 
-	t.AssertEqual(JWT.NewToken("newuserreg"), UserJSON.User.Token)
-	t.AssertEqual("newuserreg", UserJSON.User.Username)
+	t.AssertEqual(JWT.NewToken(demoUsername), UserJSON.User.Token)
+	t.AssertEqual(demoUsername, UserJSON.User.Username)
 	t.AssertEqual(bodyUser.User.Email, UserJSON.User.Email)
 }
 
@@ -69,20 +70,20 @@ func (t *UserControllerTest) TestLoginFail() {
 	tests := []testLogin{
 		{
 			errorKey: "email",
-			message:  "Required\n",
+			message:  models.CORRECT_MSG,
 			body: UserLoginBody{
 				UserLogin{
 					Email:    "",
-					Password: "password",
+					Password: demoRegPassword,
 				},
 			},
 		},
 		{
 			errorKey: "password",
-			message:  "Required\n",
+			message:  models.CORRECT_MSG,
 			body: UserLoginBody{
 				UserLogin{
-					Email:    "user1@example.com",
+					Email:    demoRegEmail,
 					Password: "",
 				},
 			},
@@ -115,16 +116,16 @@ func (t *UserControllerTest) TestLoginFail() {
 	for _, errorKey := range errorKeys {
 		msg, ok := ErrorJSON.Errors[errorKey]
 		t.Assert(ok)
-		t.AssertEqual("Required\n", msg[0])
+		t.AssertEqual(models.CORRECT_MSG, msg[0])
 	}
 }
 
 func (t *UserControllerTest) TestRegistrationSuccessFully() {
 	bodyUser := UserRegistrationBody{
 		UserRegister{
-			Username: "newuserreg",
-			Email:    "newuserreg@example.com",
-			Password: "password",
+			Username: demoRegUsername,
+			Email:    demoRegEmail,
+			Password: demoRegPassword,
 		},
 	}
 
@@ -136,7 +137,7 @@ func (t *UserControllerTest) TestRegistrationSuccessFully() {
 	var UserJSON = controllers.UserJSON{}
 	json.Unmarshal(t.ResponseBody, &UserJSON)
 
-	t.AssertEqual(JWT.NewToken("newuserreg"), UserJSON.User.Token)
+	t.AssertEqual(JWT.NewToken(demoRegUsername), UserJSON.User.Token)
 	t.AssertEqual(bodyUser.User.Username, UserJSON.User.Username)
 	t.AssertEqual(bodyUser.User.Email, UserJSON.User.Email)
 }
@@ -145,33 +146,33 @@ func (t *UserControllerTest) TestRegistrationFail() {
 	tests := []testRegistration{
 		{
 			errorKey: "username",
-			message:  "Required\n",
+			message:  models.CORRECT_MSG,
 			body: UserRegistrationBody{
 				UserRegister{
 					Username: "",
-					Email:    "newuserreg@example.com",
-					Password: "password",
+					Email:    demoRegEmail,
+					Password: demoRegPassword,
 				},
 			},
 		},
 		{
 			errorKey: "email",
-			message:  "Required\n",
+			message:  models.CORRECT_MSG,
 			body: UserRegistrationBody{
 				UserRegister{
-					Username: "newuserreq",
+					Username: demoRegUsername,
 					Email:    "",
-					Password: "password",
+					Password: demoRegPassword,
 				},
 			},
 		},
 		{
 			errorKey: "password",
-			message:  "Required\n",
+			message:  models.CORRECT_MSG,
 			body: UserRegistrationBody{
 				UserRegister{
-					Username: "newuserreg",
-					Email:    "newuserreg@example.com",
+					Username: demoRegUsername,
+					Email:    demoRegEmail,
 					Password: "",
 				},
 			},
@@ -204,7 +205,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 	for _, errorKey := range errorKeys {
 		msg, ok := ErrorJSON.Errors[errorKey]
 		t.Assert(ok)
-		t.AssertEqual("Required\n", msg[0])
+		t.AssertEqual(models.CORRECT_MSG, msg[0])
 	}
 }
 
@@ -218,7 +219,7 @@ func (t *UserControllerTest) TestGetCurrentUserSuccess() {
 
 	request.Header = http.Header{
 		"Accept":        []string{"application/json"},
-		"Authorization": []string{fmt.Sprintf("Token %v", JWT.NewToken(users[0].Username))},
+		"Authorization": []string{fmt.Sprintf("Token %v", JWT.NewToken(demoUsername))},
 	}
 	request.Send()
 	t.AssertOk()

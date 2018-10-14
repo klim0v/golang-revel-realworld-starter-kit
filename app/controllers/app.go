@@ -59,14 +59,14 @@ func (c *ApplicationController) currentUser() *models.User {
 	return &models.User{}
 }
 
-func (c *ApplicationController) FindUserByUsername(username string) *models.User {
+func (c ApplicationController) FindUserByUsername(username string) *models.User {
 	return c.findUserByCondition("Username=?", username)
 }
 
-func (c *ApplicationController) FindUserByEmail(email string) *models.User {
+func (c ApplicationController) FindUserByEmail(email string) *models.User {
 	return c.findUserByCondition("Email=?", email)
 }
-func (c *ApplicationController) findUserByCondition(pred interface{}, args ...interface{}) *models.User {
+func (c ApplicationController) findUserByCondition(pred interface{}, args ...interface{}) *models.User {
 	user := &models.User{}
 	err := c.Txn.SelectOne(user, c.Db.SqlStatementBuilder.Select("*").From("User").Where(pred, args...))
 	if err != nil {

@@ -28,8 +28,8 @@ func (c UserController) Create() revel.Result {
 
 	usernameUnique := c.FindUserByUsername(bodyUser.Username) == nil
 	emailUnique := c.FindUserByEmail(bodyUser.Email) == nil
-	c.Validation.Required(usernameUnique).Key("username").Message("has already been taken")
-	c.Validation.Required(emailUnique).Key("email").Message("has already been taken")
+	c.Validation.Required(usernameUnique).Key("username").Message(models.TAKEN_MSG)
+	c.Validation.Required(emailUnique).Key("email").Message(models.TAKEN_MSG)
 	if c.Validation.HasErrors() {
 		errs := &errorJSON{}
 		errs = errs.Build(c.Validation.ErrorMap())
@@ -111,13 +111,13 @@ func (c *UserController) checkAlreadyTaken(bodyUser *models.User, user *models.U
 func (c *UserController) checkAlreadyTakenEmail(bodyUser *models.User, user *models.User) {
 	userByEmail := c.FindUserByEmail(bodyUser.Email)
 	emailUnique := userByEmail == nil || userByEmail.ID == user.ID
-	c.Validation.Required(emailUnique).Key("email").Message("has already been taken")
+	c.Validation.Required(emailUnique).Key("email").Message(models.CORRECT_MSG)
 }
 
 func (c *UserController) checkAlreadyTakenUsername(bodyUser *models.User, user *models.User) {
 	userByUsername := c.FindUserByUsername(bodyUser.Username)
 	usernameUnique := userByUsername == nil || userByUsername.ID == user.ID
-	c.Validation.Required(usernameUnique).Key("username").Message("has already been taken")
+	c.Validation.Required(usernameUnique).Key("username").Message(models.CORRECT_MSG)
 }
 
 func (c UserController) Login() revel.Result {
@@ -150,20 +150,21 @@ func (c UserController) Login() revel.Result {
 }
 
 func (c UserController) checkValidate(bodyUser *models.User) (user *models.User, errs *errorJSON) {
-	c.Validation.Required(bodyUser.Email).Key("email")
-	c.Validation.Required(bodyUser.Password).Key("password")
+	errs = &errorJSON{}
+	c.Validation.Required(bodyUser.Email).Key("email").Message(models.CORRECT_MSG)
+	c.Validation.Required(bodyUser.Password).Key("password").Message(models.CORRECT_MSG)
 	if c.Validation.HasErrors() {
 		errs = errs.Build(c.Validation.ErrorMap())
 		return nil, errs
 	}
 
 	user = c.FindUserByEmail(bodyUser.Email)
-	c.Validation.Required(user != nil).Key("email").Message("user not found by email")
+	c.Validation.Required(user != nil).Key("email").Message(models.CORRECT_MSG)
 	if c.Validation.HasErrors() {
 		errs = errs.Build(c.Validation.ErrorMap())
 		return nil, errs
 	}
-	c.Validation.Required(user.MatchPassword(bodyUser.Password)).Key("password").Message("invalid")
+	c.Validation.Required(user.MatchPassword(bodyUser.Password)).Key("password").Message(models.CORRECT_MSG)
 	if c.Validation.HasErrors() {
 		errs = errs.Build(c.Validation.ErrorMap())
 		return nil, errs

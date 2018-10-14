@@ -15,8 +15,32 @@ For more information on how to this works with other frontends/backends, head ov
 
 # How it works
 
-> Describe the general architecture of your app here
+Below is the recommended layout of a Revel application, supplemented with domain entities and services.
 
+    my_gocode/ - GOPATH root
+        src/ - GOPATH src/ directory
+            github.com/revel/revel/ - Revel source code
+            bitbucket.org/me/sample/ - Sample app root
+                entities/ - domain entities
+                app/ - app sources
+                    controllers/ - app controllers
+                        init.go - interceptor registration
+                    models/ - app domain models
+                    jobs/ - app domain jobs
+                    services/ - app domain services
+                    routes/ - reverse routes (generated code)
+                    views/ - templates
+                    tmp/ - app main file, generated code
+                tests/ - test suites
+                conf/ - configuration files
+                    app.conf - main configuration file
+                    routes - routes definition file
+                messages/ - i18n message files
+                public/ - static/public assets
+                    css/ - stylesheet files
+                    js/ - javascript files
+                    images/ - image files
+                    
 # Getting started
 
 1. Install _docker_ and _docker-compose_ to your system

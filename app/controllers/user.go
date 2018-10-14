@@ -48,7 +48,7 @@ func (c UserController) Create() revel.Result {
 		&models.User{
 			Username: user.Username,
 			Email:    user.Email,
-			Token:    c.JWT.NewToken(user.Username),
+			Token:    c.JWT.NewToken(user.ID, user.Username),
 		},
 	}
 	return c.RenderJSON(res)
@@ -83,7 +83,7 @@ func (c UserController) Update() revel.Result {
 		&models.User{
 			Username: user.Username,
 			Email:    user.Email,
-			Token:    c.JWT.NewToken(user.Username),
+			Token:    c.JWT.NewToken(user.ID, user.Username),
 			Bio:      user.Bio,
 			Image:    user.Image,
 		},
@@ -140,7 +140,7 @@ func (c UserController) Login() revel.Result {
 		&models.User{
 			Username: user.Username,
 			Email:    user.Email,
-			Token:    c.JWT.NewToken(user.Username),
+			Token:    c.JWT.NewToken(user.ID, user.Username),
 			Bio:      user.Bio,
 			Image:    user.Image,
 		},

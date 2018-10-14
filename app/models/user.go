@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/gorp.v2"
@@ -24,7 +25,7 @@ type User struct {
 }
 
 func (user *User) String() string {
-	return user.Username
+	return fmt.Sprintf("%s(%d)", user.Username, user.ID)
 }
 
 func NewUser(username, email, password string) *User {

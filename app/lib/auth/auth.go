@@ -16,17 +16,18 @@ var secret = []byte(os.Getenv("JWT_SECRET"))
 // username to identify the user on request
 type Claims struct {
 	jwt.StandardClaims
+	UserID   int
 	Username string
 }
 
 // NewClaims creates custom claims given standard claim and username
-func NewClaims(claims jwt.StandardClaims, username string) *Claims {
-	return &Claims{claims, username}
+func NewClaims(claims jwt.StandardClaims, id int, username string) *Claims {
+	return &Claims{StandardClaims: claims, UserID: id, Username: username}
 }
 
 // Tokener is how the handlers will interface with tokens
 type Tokener interface {
-	NewToken(string) string
+	NewToken(int, string) string
 	CheckRequest(*revel.Request) (*Claims, error)
 	GetClaims(token string) (*Claims, error)
 	GetToken(r *revel.Request) (string, error)
@@ -50,8 +51,8 @@ func NewJWT() *JWT {
 
 // NewToken creates a new JWT with a 24 hour expire date
 // and with the user's username in the claims
-func (j *JWT) NewToken(username string) string {
-	claims := NewClaims(j.Claims, username)
+func (j *JWT) NewToken(id int, username string) string {
+	claims := NewClaims(j.Claims, id, username)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	ss, _ := token.SignedString([]byte(secret))
 	return ss

@@ -35,28 +35,29 @@ func (c *ApplicationController) Init() revel.Result {
 	return nil
 }
 func (c *ApplicationController) AddUser() revel.Result {
-	user := c.currentUser()
-	if user == nil {
-		return c.NotFound("user not found by username")
-	}
-	revel.TRACE.Println(user)
-	c.Args[currentUserKey] = user
+	c.Args[currentUserKey] = c.currentUser()
 	return nil
 }
 
-func (c *ApplicationController) currentUser() *models.User {
+func (c *ApplicationController) currentUser() (user *models.User) {
+	user = &models.User{}
 	token, err := c.JWT.GetToken(c.Request)
-	if err == nil {
-		claims, err := c.JWT.GetClaims(token)
-		if err == nil {
-			user := c.FindUserByUsername(claims.Username)
-			if user != nil {
-				user.Token = token
-				return user
-			}
-		}
+	revel.TRACE.Println("tok", token)
+	if err != nil {
+		return
 	}
-	return &models.User{}
+	claims, err := c.JWT.GetClaims(token)
+	if err != nil {
+		return
+	}
+	obj, err := c.Db.Get(models.User{}, claims.UserID)
+	if obj == nil {
+		return
+	}
+	user = obj.(*models.User)
+	user.Token = token
+	revel.TRACE.Println(currentUserKey, user)
+	return
 }
 
 func (c ApplicationController) FindUserByUsername(username string) *models.User {

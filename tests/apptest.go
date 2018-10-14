@@ -19,8 +19,9 @@ type ErrorJSON struct {
 }
 
 var (
-	JWT   auth.Tokener
-	users []*models.User
+	JWT    auth.Tokener
+	users  []*models.User
+	demoID int
 )
 
 const (
@@ -45,8 +46,8 @@ func (t *AppTest) Before() {
 		if err := app.Dbm.Insert(user); err != nil {
 			panic(err)
 		}
+		demoID = user.ID
 	}
-
 	JWT = auth.NewJWT()
 }
 

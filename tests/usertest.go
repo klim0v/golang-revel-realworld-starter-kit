@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/klim0v/golang-revel-realworld-starter-kit/app"
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/controllers"
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/routes"
@@ -138,8 +139,9 @@ func (t *UserControllerTest) TestRegistrationSuccessFully() {
 
 	var UserJSON = controllers.UserJSON{}
 	json.Unmarshal(t.ResponseBody, &UserJSON)
-
-	t.AssertEqual(JWT.NewToken(demoRegUsername), UserJSON.User.Token)
+	userId, err := app.Dbm.SelectInt("select ID from User where Username=? and Email=?", demoRegUsername, demoRegEmail)
+	t.Assert(err == nil)
+	t.AssertEqual(JWT.NewToken(int(userId), demoRegUsername), UserJSON.User.Token)
 	t.AssertEqual(bodyUser.User.Username, UserJSON.User.Username)
 	t.AssertEqual(bodyUser.User.Email, UserJSON.User.Email)
 }
@@ -218,10 +220,9 @@ func (t *UserControllerTest) TestGetCurrentUserUnauthorized() {
 
 func (t *UserControllerTest) TestGetCurrentUserSuccess() {
 	request := t.GetCustom(t.BaseUrl() + routes.UserController.Read())
-
 	request.Header = http.Header{
 		"Accept":        []string{"application/json"},
-		"Authorization": []string{fmt.Sprintf("Token %v", JWT.NewToken(demoUsername))},
+		"Authorization": []string{fmt.Sprintf("Token %v", JWT.NewToken(demoID, ""))},
 	}
 	request.Send()
 	t.AssertOk()
@@ -232,7 +233,18 @@ func (t *UserControllerTest) TestGetCurrentUserNotFound() {
 
 	request.Header = http.Header{
 		"Accept":        []string{"application/json"},
-		"Authorization": []string{fmt.Sprintf("Token %v", JWT.NewToken("not-found-user"))},
+		"Authorization": []string{fmt.Sprintf("Token %v", JWT.NewToken(demoID+999, ""))},
+	}
+	request.Send()
+	t.AssertStatus(401)
+}
+
+func (t *UserControllerTest) TestGetCurrentUserInvalidToken() {
+	request := t.GetCustom(t.BaseUrl() + routes.UserController.Read())
+
+	request.Header = http.Header{
+		"Accept":        []string{"application/json"},
+		"Authorization": []string{fmt.Sprintf("Token %v", "invalid-token")},
 	}
 	request.Send()
 	t.AssertStatus(401)

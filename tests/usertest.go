@@ -61,7 +61,9 @@ func (t *UserControllerTest) TestLoginSuccessFully() {
 	var UserJSON = controllers.UserJSON{}
 	json.Unmarshal(t.ResponseBody, &UserJSON)
 
-	t.AssertEqual(JWT.NewToken(demoUsername), UserJSON.User.Token)
+	claims, err := JWT.GetClaims(UserJSON.User.Token)
+	t.Assert(err == nil)
+	t.AssertEqual(demoUsername, claims.Username)
 	t.AssertEqual(demoUsername, UserJSON.User.Username)
 	t.AssertEqual(bodyUser.User.Email, UserJSON.User.Email)
 }

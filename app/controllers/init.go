@@ -15,11 +15,7 @@ func authorize(c *revel.Controller) revel.Result {
 	if methods, ok := requireAuth[c.Name]; ok {
 		for _, v := range methods {
 			if v == c.Request.Method {
-				user := c.Args[currentUserKey].(*models.User)
-				userEmpty := &models.User{}
-				revel.TRACE.Println(user)
-				revel.TRACE.Println(userEmpty)
-				if reflect.DeepEqual(user, userEmpty) {
+				if reflect.DeepEqual(c.Args[currentUserKey].(*models.User), &models.User{}) {
 					c.Response.Status = http.StatusUnauthorized
 					return c.RenderJSON(http.StatusText(c.Response.Status))
 				}

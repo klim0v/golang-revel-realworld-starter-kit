@@ -43,35 +43,30 @@ func (user *User) setPassword(password string) {
 var userRegex = regexp.MustCompile("^\\w*$")
 
 func (user *User) Validate(v *revel.Validation) {
+	v.Required(user.Username).Key("username").Message(EMPTY_MSG)
 	v.Check(user.Username,
-		revel.Required{},
 		revel.MaxSize{Max: 15},
 		revel.MinSize{Min: 4},
 		revel.Match{Regexp: userRegex},
-	).Key("username").Message(CORRECT_MSG)
+	).Key("username")
 
+	v.Required(user.Email).Key("email").Message(EMPTY_MSG)
 	v.Check(user.Email,
-		revel.Required{},
 		revel.ValidEmail(),
-	).Key("email").Message(CORRECT_MSG)
+	).Key("email")
 
 	if user.CreatedAt.IsZero() || user.Password != "" {
-		ValidatePassword(v, user.Password).
-			Key("password").Message(CORRECT_MSG)
+		v.Required(user.Password).Key("password").Message(EMPTY_MSG)
+		v.Check(user.Password,
+			revel.MaxSize{Max: 15},
+			revel.MinSize{Min: 5},
+		).Key("password")
 	}
 }
 
 func (user *User) MatchPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(password))
 	return err == nil
-}
-
-func ValidatePassword(v *revel.Validation, password string) *revel.ValidationResult {
-	return v.Check(password,
-		revel.Required{},
-		revel.MaxSize{Max: 15},
-		revel.MinSize{Min: 5},
-	)
 }
 
 func (user *User) PreInsert(s gorp.SqlExecutor) error {

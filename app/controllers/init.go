@@ -4,7 +4,6 @@ import (
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
 	"github.com/revel/revel"
 	"net/http"
-	"reflect"
 )
 
 var requireAuth = map[string][]string{
@@ -15,7 +14,7 @@ func authorize(c *revel.Controller) revel.Result {
 	if methods, ok := requireAuth[c.Name]; ok {
 		for _, v := range methods {
 			if v == c.Request.Method {
-				if reflect.DeepEqual(c.Args[currentUserKey].(*models.User), &models.User{}) {
+				if c.Args[currentUserKey].(*models.User) == nil {
 					c.Response.Status = http.StatusUnauthorized
 					return c.RenderJSON(http.StatusText(c.Response.Status))
 				}

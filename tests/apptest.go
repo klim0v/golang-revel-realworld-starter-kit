@@ -8,7 +8,6 @@ import (
 	"github.com/revel/revel/testing"
 	"golang.org/x/crypto/bcrypt"
 	"io"
-	"net/http"
 )
 
 type AppTest struct {
@@ -19,9 +18,8 @@ type ErrorJSON struct {
 }
 
 var (
-	JWT    auth.Tokener
-	users  []*models.User
-	demoID int
+	JWT   auth.Tokener
+	users []*models.User
 )
 
 const (
@@ -40,36 +38,48 @@ func (t *AppTest) Before() {
 		[]byte(demoPassword), bcrypt.DefaultCost)
 
 	users = []*models.User{
-		{Username: demoUsername, Email: demoEmail, HashedPassword: bcryptPassword},
+		{Username: demoUsername, Email: demoEmail, Password: demoPassword, HashedPassword: bcryptPassword},
+		{Username: "foo" + demoUsername, Email: "foo" + demoEmail, Password: "foo" + demoPassword, HashedPassword: bcryptPassword},
 	}
 	for _, user := range users {
 		if err := app.Dbm.Insert(user); err != nil {
 			panic(err)
 		}
-		demoID = user.ID
 	}
 	JWT = auth.NewJWT()
 }
 
 func (t *AppTest) After() {
 	println("Tear down")
-	app.Dbm.Delete(users[0])
+	for _, user := range users {
+		app.Dbm.Delete(user)
+	}
 	app.Dbm.Exec("delete from User where Username=? and Email=?", demoRegUsername, demoRegEmail)
 }
 
 func (t *AppTest) TestConnection() {
 	t.Assert(app.Dbm.Db.Ping() == nil)
-	t.AssertEqual(1, len(users))
-	count, err := app.Dbm.SelectInt("select count(*) from User where Username=? and Email=?", demoRegUsername, demoRegEmail)
-	t.Assert(err == nil)
-	t.Assert(count == 0)
+	t.AssertEqual(2, len(users))
+	for _, user := range users {
+		count, err := app.Dbm.SelectInt("select count(*) from User where Username=? and Email=?", user.Username, user.Email)
+		t.Assert(err == nil)
+		t.Assert(count == 1)
+	}
 }
 
-func (t *AppTest) MakePostRequest(url string, body io.Reader, header http.Header) {
+func (t *AppTest) MakePostRequest(url string, body io.Reader, header interface{}) {
 	request := t.PostCustom(t.BaseUrl()+url, "application/json", body)
 	if header != nil {
-		request.Header = header
+		request.Header.Set("Authorization", header.(string))
 	}
 
+	request.Send()
+}
+
+func (t *AppTest) MakePutRequest(url string, body io.Reader, header interface{}) {
+	request := t.PutCustom(t.BaseUrl()+url, "application/json", body)
+	if header != nil {
+		request.Header.Set("Authorization", header.(string))
+	}
 	request.Send()
 }

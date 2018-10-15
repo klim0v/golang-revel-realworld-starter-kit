@@ -1,6 +1,7 @@
 package models
 
 const (
-	CORRECT_MSG string = "Value not valid"
-	TAKEN_MSG   string = "Value entered is taken"
+	EMPTY_MSG   string = "value is empty"
+	INVALID_MSG string = "value is invalid"
+	TAKEN_MSG   string = "value entered is taken"
 )

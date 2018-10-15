@@ -27,7 +27,7 @@ func NewClaims(claims jwt.StandardClaims, id int, username string) *Claims {
 
 // Tokener is how the handlers will interface with tokens
 type Tokener interface {
-	NewToken(int, string) string
+	NewToken(id int, username string) string
 	CheckRequest(*revel.Request) (*Claims, error)
 	GetClaims(token string) (*Claims, error)
 	GetToken(r *revel.Request) (string, error)

@@ -3,7 +3,6 @@ package app
 import (
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
 	rgorp "github.com/revel/modules/orm/gorp/app"
-	_ "github.com/revel/modules/static"
 	"github.com/revel/revel"
 	"gopkg.in/gorp.v2"
 )

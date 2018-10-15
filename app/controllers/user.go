@@ -161,7 +161,8 @@ func (c UserController) checkValidate(bodyUser *models.User) (user *models.User,
 		errs = errs.Build(c.Validation.ErrorMap())
 		return nil, errs
 	}
-	c.Validation.Required(user.MatchPassword(bodyUser.Password)).Key("password").Message(models.INVALID_MSG)
+	match := user.MatchPassword(bodyUser.Password)
+	c.Validation.Required(match).Key("password").Message(models.INVALID_MSG)
 	if c.Validation.HasErrors() {
 		errs = errs.Build(c.Validation.ErrorMap())
 		return nil, errs

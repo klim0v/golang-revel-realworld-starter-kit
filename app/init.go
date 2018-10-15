@@ -1,7 +1,6 @@
 package app
 
 import (
-	"database/sql"
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
 	rgorp "github.com/revel/modules/orm/gorp/app"
 	_ "github.com/revel/modules/static"
@@ -20,14 +19,12 @@ var (
 )
 
 func InitDB() {
-	db, err := sql.Open("mysql", revel.Config.StringDefault("db.connection", ""))
-	if err != nil {
-		panic(err)
-	}
-	Dbm = &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}}
+	Dbm = rgorp.Db.Map
+	Dbm.Dialect = &gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}
 
 	t := Dbm.AddTable(models.User{}).SetKeys(true, "ID")
 	t.ColMap("Password").Transient = true
+	t.ColMap("Token").Transient = true
 	t.ColMap("Username").SetUnique(true)
 	t.ColMap("Email").SetUnique(true)
 
@@ -47,13 +44,6 @@ func InitDB() {
 	t.ColMap("Name").SetUnique(true)
 
 	rgorp.Db.TraceOn(revel.AppLog)
-	Dbm.CreateTables()
-	Dbm.CreateIndex()
-
-	err = Dbm.Db.Ping()
-	if err != nil {
-		panic(err)
-	}
 }
 
 func init() {
@@ -90,6 +80,7 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	c.Response.Out.Header().Add("X-XSS-Protection", "1; mode=block")
 	c.Response.Out.Header().Add("X-Content-Type-Options", "nosniff")
 	c.Response.Out.Header().Add("Referrer-Policy", "strict-origin-when-cross-origin")
+	c.Response.Out.Header().Add("Access-Control-Allow-Origin", "*")
 
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }

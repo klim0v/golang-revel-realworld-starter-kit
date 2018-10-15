@@ -23,6 +23,7 @@ services:
     image: mysql:5.7
     volumes:
     - ./docker/runtime/mysql:/var/lib/mysql
+    - ./docker/db/dump/newdb.sql:/docker-entrypoint-initdb.d/newdb.sql
     environment:
       MYSQL_DATABASE: database
       MYSQL_ROOT_PASSWORD: 123123

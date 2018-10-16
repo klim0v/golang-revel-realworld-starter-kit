@@ -4,6 +4,8 @@ import (
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
 	"github.com/revel/revel"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type ArticleController struct {
@@ -21,10 +23,13 @@ type ArticlesJSON struct {
 
 func (c ArticleController) Index(tag, favorited, author string, offset, limit uint64) revel.Result {
 	var articles []*models.Article
-
-	builder := c.Db.SqlStatementBuilder.Select("*").From("Article").Offset(offset).Limit(limit)
+	var user *models.User
+	builder := c.Db.SqlStatementBuilder.Select("*").
+		From("Article").
+		Offset(offset).
+		Limit(limit)
 	if author != "" {
-		user := c.FindUserByUsername(author)
+		user = c.FindUserByUsername(author)
 		if user != nil {
 			builder.Where("UserID=?", user.ID)
 		}
@@ -32,7 +37,33 @@ func (c ArticleController) Index(tag, favorited, author string, offset, limit ui
 	if _, err := c.Txn.Select(&articles, builder); err != nil {
 		c.Log.Fatal("Unexpected error loading articles", "error", err)
 	}
-	revel.TRACE.Println(articles)
+	if user != nil {
+		for _, article := range articles {
+			article.User = user
+		}
+	} else {
+		var users []*models.User
+		var userIds []string
+		for _, article := range articles {
+			userIds = append(userIds, strconv.Itoa(article.UserID))
+		}
+		selectBuilder := c.Db.SqlStatementBuilder.
+			Select("*").
+			From("User").
+			Where(
+				"ID in (?)",
+				strings.Join(userIds, ","),
+			)
+		c.Txn.Select(&users, selectBuilder)
+		for _, article := range articles {
+			for _, user := range users {
+				if user.ID == article.UserID {
+					article.User = user
+					break
+				}
+			}
+		}
+	}
 	return c.RenderJSON(&ArticlesJSON{articles, len(articles)})
 }
 func (c ArticleController) Create() revel.Result {
@@ -49,7 +80,7 @@ func (c ArticleController) Create() revel.Result {
 		c.Args[currentUserKey].(*models.User),
 	)
 	if err = c.Txn.Insert(newArticle); err != nil {
-		c.Log.Fatal("Unexpected error loading articles", "error", err)
+		c.Log.Fatal("Unexpected error insert article", "error", err)
 	}
 	c.Response.Status = http.StatusCreated
 	return c.RenderJSON(&ArticleJSON{newArticle})

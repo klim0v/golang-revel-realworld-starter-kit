@@ -19,8 +19,21 @@ type ArticlesJSON struct {
 	ArticlesCount int               `json:"articlesCount"`
 }
 
-func (c ArticleController) Index() revel.Result {
-	return c.Todo()
+func (c ArticleController) Index(tag, favorited, author string, offset, limit uint64) revel.Result {
+	var articles []*models.Article
+
+	builder := c.Db.SqlStatementBuilder.Select("*").From("Article").Offset(offset).Limit(limit)
+	if author != "" {
+		user := c.FindUserByUsername(author)
+		if user != nil {
+			builder.Where("UserID=?", user.ID)
+		}
+	}
+	if _, err := c.Txn.Select(&articles, builder); err != nil {
+		c.Log.Fatal("Unexpected error loading articles", "error", err)
+	}
+	revel.TRACE.Println(articles)
+	return c.RenderJSON(&ArticlesJSON{articles, len(articles)})
 }
 func (c ArticleController) Create() revel.Result {
 	article, err := c.getBodyArticle()
@@ -28,20 +41,18 @@ func (c ArticleController) Create() revel.Result {
 		c.Response.Status = http.StatusUnprocessableEntity
 		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"BindJSON": {err.Error()}}})
 	}
-	user := c.Args[currentUserKey].(*models.User)
-	newArticle := models.NewArticle(article.Title, article.Description, article.Body, article.TagList, user)
-	err = c.Txn.Insert(newArticle)
-	if err != nil {
-		revel.ERROR.Println(err)
-		c.Response.Status = http.StatusInternalServerError
-		return c.RenderJSON(http.StatusText(c.Response.Status))
-	}
-
-	res := &ArticleJSON{
-		newArticle,
+	newArticle := models.NewArticle(
+		article.Title,
+		article.Description,
+		article.Body,
+		article.TagList,
+		c.Args[currentUserKey].(*models.User),
+	)
+	if err = c.Txn.Insert(newArticle); err != nil {
+		c.Log.Fatal("Unexpected error loading articles", "error", err)
 	}
 	c.Response.Status = http.StatusCreated
-	return c.RenderJSON(res)
+	return c.RenderJSON(&ArticleJSON{newArticle})
 }
 func (c ArticleController) Read() revel.Result {
 	return c.Todo()

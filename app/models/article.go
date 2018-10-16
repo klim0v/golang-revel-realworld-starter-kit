@@ -1,32 +1,85 @@
 package models
 
 import (
+	"github.com/Machiel/slugify"
+	"github.com/revel/revel"
 	"gopkg.in/gorp.v2"
+	"strconv"
 	"time"
 )
 
 type Article struct {
-	ID             int
-	Slug           string
-	Title          string
-	Description    string
-	Body           string
-	UserID         int
-	FavoritesCount int
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID             int       `json:"-"`
+	Slug           string    `json:"slug"`
+	Title          string    `json:"title"`
+	Description    string    `json:"description"`
+	Body           string    `json:"body"`
+	UserID         int       `json:"-"`
+	FavoritesCount int       `json:"favoritesCount"`
+	CreatedAt      time.Time `json:"-"`
+	UpdatedAt      time.Time `json:"-"`
 
 	// Transient
-	User User
+	TagList            []string `json:"tagList"`
+	User               *User    `json:"author"`
+	Favorited          bool     `json:"favorited"`
+	CreatedAtFormatted string   `json:"createdAt"`
+	UpdatedAtFormatted string   `json:"updatedAt"`
 }
 
-func (i *Article) PreInsert(s gorp.SqlExecutor) error {
-	i.CreatedAt = time.Now()
-	i.UpdatedAt = i.CreatedAt
+func NewArticle(title, description, body string, tagList []string, user *User) *Article {
+	article := &Article{Title: title, Description: description, Body: body}
+	article.setTagList(tagList)
+	article.setUser(user)
+	return article
+}
+
+func (article *Article) PostGet(s gorp.SqlExecutor) error {
+	article.CreatedAtFormatted = article.CreatedAt.UTC().Format(TIME_FORMAT)
+	article.UpdatedAtFormatted = article.UpdatedAt.UTC().Format(TIME_FORMAT)
 	return nil
 }
 
-func (i *Article) PreUpdate(s gorp.SqlExecutor) error {
-	i.UpdatedAt = time.Now()
+func (article *Article) setSlug(s gorp.SqlExecutor, slugFromTitle string) {
+	article.Slug = slugFromTitle
+	var slugs []string
+	_, err := s.Select(&slugs, "select `Slug` from `Article` where `Slug` LIKE :slug",
+		map[string]interface{}{
+			"slug": article.Slug + "%",
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+	revel.TRACE.Println(slugs)
+	for k, slug := range slugs {
+		if article.Slug == slug {
+			article.Slug = slugFromTitle + "-" + strconv.Itoa(k)
+		}
+	}
+}
+func (article *Article) PreInsert(s gorp.SqlExecutor) error {
+	article.CreatedAt = time.Now()
+	article.UpdatedAt = article.CreatedAt
+	article.CreatedAtFormatted = article.CreatedAt.UTC().Format(TIME_FORMAT)
+	article.UpdatedAtFormatted = article.CreatedAt.UTC().Format(TIME_FORMAT)
+	slugFromTitle := slugify.Slugify(article.Title)
+	article.setSlug(s, slugFromTitle)
 	return nil
+}
+
+func (article *Article) PreUpdate(s gorp.SqlExecutor) error {
+	article.UpdatedAt = time.Now()
+	article.UpdatedAtFormatted = article.UpdatedAt.UTC().Format(TIME_FORMAT)
+	slugFromTitle := slugify.Slugify(article.Title)
+	article.setSlug(s, slugFromTitle)
+	return nil
+}
+func (article *Article) setTagList(tagList []string) {
+	article.TagList = tagList
+}
+
+func (article *Article) setUser(user *User) {
+	article.UserID = user.ID
+	article.User = user
 }

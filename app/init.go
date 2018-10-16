@@ -31,6 +31,10 @@ func InitDB() {
 
 	t = Dbm.AddTable(models.Article{}).SetKeys(true, "ID")
 	t.ColMap("User").Transient = true
+	t.ColMap("TagList").Transient = true
+	t.ColMap("Favorited").Transient = true
+	t.ColMap("CreatedAtFormatted").Transient = true
+	t.ColMap("UpdatedAtFormatted").Transient = true
 
 	t = Dbm.AddTable(models.Favorite{}).SetKeys(true, "ID")
 	t.ColMap("User").Transient = true

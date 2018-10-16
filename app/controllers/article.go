@@ -1,47 +1,47 @@
 package controllers
 
 import (
+	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
 	"github.com/revel/revel"
+	"net/http"
 )
 
 type ArticleController struct {
 	ApplicationController
 }
 
-type Article struct {
-	Slug           string   `json:"slug"`
-	Title          string   `json:"title"`
-	Description    string   `json:"description"`
-	Body           string   `json:"body"`
-	Favorited      bool     `json:"favorited"`
-	FavoritesCount int      `json:"favoritesCount"`
-	TagList        []string `json:"tagList"`
-	CreatedAt      string   `json:"createdAt"`
-	UpdatedAt      string   `json:"updatedAt"`
-	Author         Author   `json:"user"`
-}
-
-type Author struct {
-	Username  string `json:"username"`
-	Bio       string `json:"bio"`
-	Image     string `json:"image"`
-	Following bool   `json:"following"`
-}
-
 type ArticleJSON struct {
-	Article `json:"article"`
+	*models.Article `json:"article"`
 }
 
 type ArticlesJSON struct {
-	Articles      []Article `json:"articles"`
-	ArticlesCount int       `json:"articlesCount"`
+	Articles      []*models.Article `json:"articles"`
+	ArticlesCount int               `json:"articlesCount"`
 }
 
 func (c ArticleController) Index() revel.Result {
 	return c.Todo()
 }
 func (c ArticleController) Create() revel.Result {
-	return c.Todo()
+	article, err := c.getBodyArticle()
+	if err != nil {
+		c.Response.Status = http.StatusUnprocessableEntity
+		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"BindJSON": {err.Error()}}})
+	}
+	user := c.Args[currentUserKey].(*models.User)
+	newArticle := models.NewArticle(article.Title, article.Description, article.Body, article.TagList, user)
+	err = c.Txn.Insert(newArticle)
+	if err != nil {
+		revel.ERROR.Println(err)
+		c.Response.Status = http.StatusInternalServerError
+		return c.RenderJSON(http.StatusText(c.Response.Status))
+	}
+
+	res := &ArticleJSON{
+		newArticle,
+	}
+	c.Response.Status = http.StatusCreated
+	return c.RenderJSON(res)
 }
 func (c ArticleController) Read() revel.Result {
 	return c.Todo()
@@ -51,4 +51,13 @@ func (c ArticleController) Update() revel.Result {
 }
 func (c ArticleController) Delete() revel.Result {
 	return c.Todo()
+}
+
+func (c ArticleController) getBodyArticle() (*models.Article, error) {
+	body := ArticleJSON{}
+	err := c.Params.BindJSON(&body)
+	if err != nil {
+		return nil, err
+	}
+	return body.Article, nil
 }

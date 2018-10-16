@@ -24,8 +24,6 @@ func InitDB() {
 	t := Dbm.AddTable(models.User{}).SetKeys(true, "ID")
 	t.ColMap("Password").Transient = true
 	t.ColMap("Token").Transient = true
-	t.ColMap("Username").SetUnique(true)
-	t.ColMap("Email").SetUnique(true)
 
 	t = Dbm.AddTable(models.Comment{}).SetKeys(true, "ID")
 	t.ColMap("User").Transient = true
@@ -33,14 +31,12 @@ func InitDB() {
 
 	t = Dbm.AddTable(models.Article{}).SetKeys(true, "ID")
 	t.ColMap("User").Transient = true
-	t.ColMap("Slug").SetUnique(true)
 
 	t = Dbm.AddTable(models.Favorite{}).SetKeys(true, "ID")
 	t.ColMap("User").Transient = true
 	t.ColMap("Article").Transient = true
 
 	t = Dbm.AddTable(models.Tag{}).SetKeys(true, "ID")
-	t.ColMap("Name").SetUnique(true)
 
 	rgorp.Db.TraceOn(revel.AppLog)
 }

@@ -153,7 +153,7 @@ func (t *UserControllerTest) TestRegistrationSuccessFully() {
 	jsonBody, _ := json.Marshal(bodyUser)
 
 	t.MakePostRequest(routes.UserController.Create(), bytes.NewBuffer(jsonBody), nil)
-	t.AssertOk()
+	t.AssertStatus(http.StatusCreated)
 
 	var UserJSON = controllers.UserJSON{}
 	json.Unmarshal(t.ResponseBody, &UserJSON)
@@ -205,7 +205,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 		jsonBody, _ := json.Marshal(test.body)
 
 		t.MakePostRequest(routes.UserController.Create(), bytes.NewBuffer(jsonBody), nil)
-		t.AssertStatus(422)
+		t.AssertStatus(http.StatusUnprocessableEntity)
 
 		var ErrorJSON = ErrorJSON{}
 		json.Unmarshal(t.ResponseBody, &ErrorJSON)
@@ -218,7 +218,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 	jsonBody, _ := json.Marshal(UserRegistrationBody{})
 
 	t.MakePostRequest(routes.UserController.Create(), bytes.NewBuffer(jsonBody), nil)
-	t.AssertStatus(422)
+	t.AssertStatus(http.StatusUnprocessableEntity)
 
 	var ErrorJSON = ErrorJSON{}
 	json.Unmarshal(t.ResponseBody, &ErrorJSON)
@@ -233,7 +233,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 
 func (t *UserControllerTest) TestGetCurrentUserUnauthorized() {
 	t.Get(routes.UserController.Read())
-	t.AssertStatus(401)
+	t.AssertStatus(http.StatusUnauthorized)
 }
 
 func (t *UserControllerTest) TestGetCurrentUserSuccess() {
@@ -254,7 +254,7 @@ func (t *UserControllerTest) TestGetCurrentUserNotFound() {
 		"Authorization": []string{fmt.Sprintf("Token %v", JWT.NewToken(users[0].ID+999, ""))},
 	}
 	request.Send()
-	t.AssertStatus(401)
+	t.AssertStatus(http.StatusUnauthorized)
 }
 
 func (t *UserControllerTest) TestGetCurrentUserInvalidToken() {
@@ -265,7 +265,7 @@ func (t *UserControllerTest) TestGetCurrentUserInvalidToken() {
 		"Authorization": []string{fmt.Sprintf("Token %v", "invalid-token")},
 	}
 	request.Send()
-	t.AssertStatus(401)
+	t.AssertStatus(http.StatusUnauthorized)
 }
 
 func (t *UserControllerTest) TestUpdateUserFail() {
@@ -331,7 +331,7 @@ func (t *UserControllerTest) TestUpdateUserFail() {
 	jsonBody, _ := json.Marshal(UserUpdateBody{})
 
 	t.MakePutRequest(routes.UserController.Update(), bytes.NewBuffer(jsonBody), header)
-	t.AssertStatus(422)
+	t.AssertStatus(http.StatusUnprocessableEntity)
 
 	var ErrorJSON = ErrorJSON{}
 	json.Unmarshal(t.ResponseBody, &ErrorJSON)

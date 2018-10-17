@@ -40,7 +40,7 @@ func (c UserController) Create() revel.Result {
 	if err != nil {
 		revel.ERROR.Println(err)
 		c.Response.Status = http.StatusInternalServerError
-		return c.RenderJSON(http.StatusText(c.Response.Status))
+		return c.Render(http.StatusText(c.Response.Status))
 	}
 
 	res := &UserJSON{
@@ -50,6 +50,7 @@ func (c UserController) Create() revel.Result {
 			Token:    c.JWT.NewToken(user.ID, user.Username),
 		},
 	}
+	c.Response.Status = http.StatusCreated
 	return c.RenderJSON(res)
 }
 func (c UserController) Read() revel.Result {

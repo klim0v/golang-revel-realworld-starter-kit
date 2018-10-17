@@ -37,6 +37,8 @@ func NewArticle(title, description, body string, tagList []string, user *User) *
 func (article *Article) PostGet(s gorp.SqlExecutor) error {
 	article.CreatedAtFormatted = article.CreatedAt.UTC().Format(TIME_FORMAT)
 	article.UpdatedAtFormatted = article.UpdatedAt.UTC().Format(TIME_FORMAT)
+	user, _ := s.Get(User{}, article.UserID)
+	article.User = user.(*User)
 	return nil
 }
 
@@ -82,4 +84,7 @@ func (article *Article) setTagList(tagList []string) {
 func (article *Article) setUser(user *User) {
 	article.UserID = user.ID
 	article.User = user
+}
+func (article *Article) IsOwnedBy(user *User) bool {
+	return article.UserID == user.ID
 }

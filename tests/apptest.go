@@ -2,8 +2,8 @@ package tests
 
 import (
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app"
-	"github.com/klim0v/golang-revel-realworld-starter-kit/app/lib/auth"
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
+	"github.com/klim0v/golang-revel-realworld-starter-kit/app/services/auth"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/revel/revel/testing"
 	"golang.org/x/crypto/bcrypt"

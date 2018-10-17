@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"database/sql"
-	"github.com/klim0v/golang-revel-realworld-starter-kit/app/lib/auth"
 	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
+	"github.com/klim0v/golang-revel-realworld-starter-kit/app/services/auth"
 	"github.com/revel/modules/orm/gorp/app/controllers"
 	"github.com/revel/revel"
 )
@@ -48,9 +48,7 @@ func (c *ApplicationController) currentUser() *models.User {
 	if obj == nil {
 		return nil
 	}
-	user := obj.(*models.User)
-	user.Token = c.JWT.NewToken(user.ID, user.Username)
-	return user
+	return obj.(*models.User)
 }
 
 func (c ApplicationController) FindUserByUsername(username string) *models.User {

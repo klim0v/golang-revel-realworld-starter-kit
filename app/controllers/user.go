@@ -53,7 +53,9 @@ func (c UserController) Create() revel.Result {
 	return c.RenderJSON(res)
 }
 func (c UserController) Read() revel.Result {
-	return c.RenderJSON(UserJSON{c.Args[currentUserKey].(*models.User)})
+	user := c.Args[currentUserKey].(*models.User)
+	user.Token = c.JWT.NewToken(user.ID, user.Username)
+	return c.RenderJSON(UserJSON{user})
 }
 func (c UserController) Update() revel.Result {
 	bodyUser, err := c.getBodyUser()

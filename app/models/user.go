@@ -36,27 +36,26 @@ func NewUser(username, email, password string) *User {
 
 func (user *User) setPassword(password string) {
 	user.Password = password
-	user.HashedPassword, _ = bcrypt.GenerateFromPassword(
-		[]byte(password), bcrypt.DefaultCost)
+	user.HashedPassword, _ = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 
 var userRegex = regexp.MustCompile("^\\w*$")
 
 func (user *User) Validate(v *revel.Validation) {
-	v.Required(user.Username).Key("username").Message(EMPTY_MSG)
+	v.Required(user.Username).Key("username").Message(EmptyMsg)
 	v.Check(user.Username,
 		revel.MaxSize{Max: 15},
 		revel.MinSize{Min: 4},
 		revel.Match{Regexp: userRegex},
 	).Key("username")
 
-	v.Required(user.Email).Key("email").Message(EMPTY_MSG)
+	v.Required(user.Email).Key("email").Message(EmptyMsg)
 	v.Check(user.Email,
 		revel.ValidEmail(),
 	).Key("email")
 
 	if user.CreatedAt.IsZero() || user.Password != "" {
-		v.Required(user.Password).Key("password").Message(EMPTY_MSG)
+		v.Required(user.Password).Key("password").Message(EmptyMsg)
 		v.Check(user.Password,
 			revel.MaxSize{Max: 15},
 			revel.MinSize{Min: 5},
@@ -79,6 +78,7 @@ func (user *User) PreUpdate(s gorp.SqlExecutor) error {
 	user.UpdatedAt = time.Now()
 	return nil
 }
+
 func (user *User) Fill(userJson *User) {
 	user.Email = userJson.Email
 	user.Username = userJson.Username

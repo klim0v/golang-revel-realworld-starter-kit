@@ -24,7 +24,8 @@ type errorJSON struct {
 	Errors ValidationErrors `json:"errors"`
 }
 
-func (err *errorJSON) Build(errMap map[string]*revel.ValidationError) *errorJSON {
+func BuildErrors(errMap map[string]*revel.ValidationError) *errorJSON {
+	err := &errorJSON{}
 	err.Errors = ValidationErrors{}
 	for _, validationError := range errMap {
 		err.Errors[validationError.Key] = []string{validationError.Message}
@@ -42,7 +43,7 @@ func (c *ApplicationController) ExtractArticle() revel.Result {
 		article := c.FindArticleBySlug(slug)
 		if article == nil {
 			c.Response.Status = http.StatusNotFound
-			return c.Render(http.StatusText(c.Response.Status))
+			return c.RenderJSON(http.StatusText(c.Response.Status))
 		}
 		c.Args[fetchedArticleKey] = article
 	}

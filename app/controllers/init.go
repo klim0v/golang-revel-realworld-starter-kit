@@ -16,7 +16,7 @@ func authorize(c *revel.Controller) revel.Result {
 			if v == c.Request.Method {
 				if c.Args[currentUserKey] == nil {
 					c.Response.Status = http.StatusUnauthorized
-					return c.Render(http.StatusText(c.Response.Status))
+					return c.RenderJSON(http.StatusText(c.Response.Status))
 				}
 			}
 		}

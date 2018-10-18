@@ -66,11 +66,17 @@ func (c ArticleController) Index(tag, favorited, author string, offset, limit ui
 	}
 	return c.RenderJSON(&ArticlesJSON{articles, len(articles)})
 }
+
 func (c ArticleController) Create() revel.Result {
 	article, err := c.getBodyArticle()
 	if err != nil {
 		c.Response.Status = http.StatusUnprocessableEntity
 		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"BindJSON": {err.Error()}}})
+	}
+	article.Validate(c.Validation)
+	if c.Validation.HasErrors() {
+		c.Response.Status = http.StatusUnprocessableEntity
+		return c.RenderJSON(BuildErrors(c.Validation.ErrorMap()))
 	}
 	articleObj := models.NewArticle(
 		article.Title,
@@ -85,20 +91,34 @@ func (c ArticleController) Create() revel.Result {
 	c.Response.Status = http.StatusCreated
 	return c.RenderJSON(&ArticleJSON{articleObj})
 }
+
 func (c ArticleController) Read() revel.Result {
 	article := c.Args[fetchedArticleKey].(*models.Article)
 	return c.RenderJSON(&ArticleJSON{article})
 }
+
 func (c ArticleController) Update() revel.Result {
-	return c.Todo()
+	article, err := c.getBodyArticle()
+	if err != nil {
+		c.Response.Status = http.StatusUnprocessableEntity
+		return c.RenderJSON(errorJSON{Errors: ValidationErrors{"BindJSON": {err.Error()}}})
+	}
+
+	articleObj := c.Args[fetchedArticleKey].(*models.Article)
+	articleObj.Fill(article)
+	if _, err = c.Txn.Update(articleObj); err != nil {
+		c.Log.Fatal("Unexpected error update article", "error", err)
+	}
+	return c.RenderJSON(&ArticleJSON{articleObj})
 }
+
 func (c ArticleController) Delete() revel.Result {
 	article := c.Args[fetchedArticleKey].(*models.Article)
 	if _, err := c.Txn.Delete(article); err != nil {
 		c.Log.Fatal("Unexpected error delete article", "error", err)
 	}
 	c.Response.Status = http.StatusOK
-	return c.Render(http.StatusText(c.Response.Status))
+	return c.RenderJSON(http.StatusText(c.Response.Status))
 }
 
 func (c ArticleController) getBodyArticle() (*models.Article, error) {

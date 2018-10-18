@@ -27,20 +27,18 @@ func (c UserController) Create() revel.Result {
 
 	usernameUnique := c.FindUserByUsername(bodyUser.Username) == nil
 	emailUnique := c.FindUserByEmail(bodyUser.Email) == nil
-	c.Validation.Required(usernameUnique).Key("username").Message(models.TAKEN_MSG)
-	c.Validation.Required(emailUnique).Key("email").Message(models.TAKEN_MSG)
+	c.Validation.Required(usernameUnique).Key("username").Message(models.TakenMsg)
+	c.Validation.Required(emailUnique).Key("email").Message(models.TakenMsg)
 	if c.Validation.HasErrors() {
-		errs := &errorJSON{}
-		errs = errs.Build(c.Validation.ErrorMap())
 		c.Response.Status = http.StatusUnprocessableEntity
-		return c.RenderJSON(errs)
+		return c.RenderJSON(BuildErrors(c.Validation.ErrorMap()))
 	}
 
 	err = c.Txn.Insert(user)
 	if err != nil {
 		revel.ERROR.Println(err)
 		c.Response.Status = http.StatusInternalServerError
-		return c.Render(http.StatusText(c.Response.Status))
+		return c.RenderJSON(http.StatusText(c.Response.Status))
 	}
 
 	res := &UserJSON{
@@ -53,11 +51,13 @@ func (c UserController) Create() revel.Result {
 	c.Response.Status = http.StatusCreated
 	return c.RenderJSON(res)
 }
+
 func (c UserController) Read() revel.Result {
 	user := c.Args[currentUserKey].(*models.User)
 	user.Token = c.JWT.NewToken(user.ID, user.Username)
 	return c.RenderJSON(UserJSON{user})
 }
+
 func (c UserController) Update() revel.Result {
 	bodyUser, err := c.getBodyUser()
 	if err != nil {
@@ -70,10 +70,8 @@ func (c UserController) Update() revel.Result {
 	user.Validate(c.Validation)
 	c.checkAlreadyTaken(bodyUser, user)
 	if c.Validation.HasErrors() {
-		errs := &errorJSON{}
-		errs = errs.Build(c.Validation.ErrorMap())
 		c.Response.Status = http.StatusUnprocessableEntity
-		return c.RenderJSON(errs)
+		return c.RenderJSON(BuildErrors(c.Validation.ErrorMap()))
 	}
 
 	_, err = c.Txn.Update(user)
@@ -111,13 +109,13 @@ func (c *UserController) checkAlreadyTaken(bodyUser *models.User, user *models.U
 func (c *UserController) checkAlreadyTakenEmail(bodyUser *models.User, user *models.User) {
 	userByEmail := c.FindUserByEmail(bodyUser.Email)
 	emailUnique := userByEmail == nil || userByEmail.ID == user.ID
-	c.Validation.Required(emailUnique).Key("email").Message(models.TAKEN_MSG)
+	c.Validation.Required(emailUnique).Key("email").Message(models.TakenMsg)
 }
 
 func (c *UserController) checkAlreadyTakenUsername(bodyUser *models.User, user *models.User) {
 	userByUsername := c.FindUserByUsername(bodyUser.Username)
 	usernameUnique := userByUsername == nil || userByUsername.ID == user.ID
-	c.Validation.Required(usernameUnique).Key("username").Message(models.TAKEN_MSG)
+	c.Validation.Required(usernameUnique).Key("username").Message(models.TakenMsg)
 }
 
 func (c UserController) Login() revel.Result {
@@ -150,25 +148,23 @@ func (c UserController) Login() revel.Result {
 }
 
 func (c UserController) checkValidate(bodyUser *models.User) (user *models.User, errs *errorJSON) {
-	errs = &errorJSON{}
-	c.Validation.Required(bodyUser.Email).Key("email").Message(models.EMPTY_MSG)
-	c.Validation.Required(bodyUser.Password).Key("password").Message(models.EMPTY_MSG)
+	c.Validation.Required(bodyUser.Email).Key("email").Message(models.EmptyMsg)
+	c.Validation.Required(bodyUser.Password).Key("password").Message(models.EmptyMsg)
 	if c.Validation.HasErrors() {
-		errs = errs.Build(c.Validation.ErrorMap())
-		return nil, errs
+		return nil, BuildErrors(c.Validation.ErrorMap())
 	}
 
 	user = c.FindUserByEmail(bodyUser.Email)
-	c.Validation.Required(user != nil).Key("email").Message(models.INVALID_MSG)
+	c.Validation.Required(user != nil).Key("email").Message(models.InvalidMsg)
 	if c.Validation.HasErrors() {
-		errs = errs.Build(c.Validation.ErrorMap())
-		return nil, errs
+		return nil, BuildErrors(c.Validation.ErrorMap())
 	}
+
 	match := user.MatchPassword(bodyUser.Password)
-	c.Validation.Required(match).Key("password").Message(models.INVALID_MSG)
+	c.Validation.Required(match).Key("password").Message(models.InvalidMsg)
 	if c.Validation.HasErrors() {
-		errs = errs.Build(c.Validation.ErrorMap())
-		return nil, errs
+		return nil, BuildErrors(c.Validation.ErrorMap())
 	}
+
 	return user, nil
 }

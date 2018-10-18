@@ -34,9 +34,15 @@ func NewArticle(title, description, body string, tagList []string, user *User) *
 	return article
 }
 
+func (article *Article) Validate(v *revel.Validation) {
+	v.Required(article.Title).Key("title").Message(EmptyMsg)
+	v.Required(article.Description).Key("description").Message(EmptyMsg)
+	v.Required(article.Body).Key("body").Message(EmptyMsg)
+}
+
 func (article *Article) PostGet(s gorp.SqlExecutor) error {
-	article.CreatedAtFormatted = article.CreatedAt.UTC().Format(TIME_FORMAT)
-	article.UpdatedAtFormatted = article.UpdatedAt.UTC().Format(TIME_FORMAT)
+	article.CreatedAtFormatted = article.CreatedAt.UTC().Format(TimeFormat)
+	article.UpdatedAtFormatted = article.UpdatedAt.UTC().Format(TimeFormat)
 	user, _ := s.Get(User{}, article.UserID)
 	article.User = user.(*User)
 	return nil
@@ -45,11 +51,7 @@ func (article *Article) PostGet(s gorp.SqlExecutor) error {
 func (article *Article) setSlug(s gorp.SqlExecutor, slugFromTitle string) {
 	article.Slug = slugFromTitle
 	var slugs []string
-	_, err := s.Select(&slugs, "select `Slug` from `Article` where `Slug` LIKE :slug",
-		map[string]interface{}{
-			"slug": article.Slug + "%",
-		},
-	)
+	_, err := s.Select(&slugs, "select `Slug` from `Article` where `Slug` LIKE ?", article.Slug+"%")
 	if err != nil {
 		panic(err)
 	}
@@ -63,8 +65,8 @@ func (article *Article) setSlug(s gorp.SqlExecutor, slugFromTitle string) {
 func (article *Article) PreInsert(s gorp.SqlExecutor) error {
 	article.CreatedAt = time.Now()
 	article.UpdatedAt = article.CreatedAt
-	article.CreatedAtFormatted = article.CreatedAt.UTC().Format(TIME_FORMAT)
-	article.UpdatedAtFormatted = article.CreatedAt.UTC().Format(TIME_FORMAT)
+	article.CreatedAtFormatted = article.CreatedAt.UTC().Format(TimeFormat)
+	article.UpdatedAtFormatted = article.CreatedAt.UTC().Format(TimeFormat)
 	slugFromTitle := slugify.Slugify(article.Title)
 	article.setSlug(s, slugFromTitle)
 	return nil
@@ -72,9 +74,7 @@ func (article *Article) PreInsert(s gorp.SqlExecutor) error {
 
 func (article *Article) PreUpdate(s gorp.SqlExecutor) error {
 	article.UpdatedAt = time.Now()
-	article.UpdatedAtFormatted = article.UpdatedAt.UTC().Format(TIME_FORMAT)
-	slugFromTitle := slugify.Slugify(article.Title)
-	article.setSlug(s, slugFromTitle)
+	article.UpdatedAtFormatted = article.UpdatedAt.UTC().Format(TimeFormat)
 	return nil
 }
 func (article *Article) setTagList(tagList []string) {
@@ -85,6 +85,15 @@ func (article *Article) setUser(user *User) {
 	article.UserID = user.ID
 	article.User = user
 }
-func (article *Article) IsOwnedBy(user *User) bool {
-	return article.UserID == user.ID
+
+func (article *Article) Fill(userJson *Article) {
+	if userJson.Body != "" {
+		article.Body = userJson.Body
+	}
+	if userJson.Description != "" {
+		article.Description = userJson.Description
+	}
+	if userJson.Title != "" {
+		article.Title = userJson.Title
+	}
 }

@@ -75,6 +75,8 @@ func (article *Article) PreInsert(s gorp.SqlExecutor) error {
 func (article *Article) PreUpdate(s gorp.SqlExecutor) error {
 	article.UpdatedAt = time.Now()
 	article.UpdatedAtFormatted = article.UpdatedAt.UTC().Format(TimeFormat)
+	slugFromTitle := slugify.Slugify(article.Title)
+	article.setSlug(s, slugFromTitle)
 	return nil
 }
 func (article *Article) setTagList(tagList []string) {

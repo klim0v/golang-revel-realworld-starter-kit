@@ -1,23 +1,35 @@
 version: "3"
 services:
+  reverse-proxy:
+    image: traefik # The official Traefik docker image
+    command: --api --docker # Enables the web UI and tells Traefik to listen to docker
+    ports:
+    - "80:80"     # The HTTP port
+    - "8080:8080" # The Web UI (enabled by --api)
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+
+  whoami:
+    image: emilevauge/whoami # A container that exposes an API to show its IP address
+    labels:
+    - traefik.frontend.rule=Host:test.local.wip
   go:
     build:
       context: .
       dockerfile: docker/go/Dockerfile
     command: revel run github.com/klim0v/golang-revel-realworld-starter-kit
     working_dir: /go
-    networks:
-    - reverse-proxy
-    - back
-    environment:
-    - VIRTUAL_HOST=${BASE_DOMAIN}
-    - VIRTUAL_PORT=9000
+    labels:
+    - traefik.frontend.rule=Host:${BASE_DOMAIN}
+    - traefik.port.rule=9000
+    expose:
+    - 9000
     env_file:
     - .env
     volumes:
     - ./:/go/src/github.com/klim0v/golang-revel-realworld-starter-kit
-    expose:
-    - 9000
+    links:
+    - db
 
   db:
     image: mysql:5.7
@@ -27,12 +39,3 @@ services:
     environment:
       MYSQL_DATABASE: database
       MYSQL_ROOT_PASSWORD: 123123
-    networks:
-    - back
-
-networks:
-  reverse-proxy:
-    external:
-      name: reverse-proxy
-  back:
-    driver: bridge

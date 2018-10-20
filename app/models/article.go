@@ -6,6 +6,7 @@ import (
 	"github.com/revel/revel"
 	"gopkg.in/gorp.v2"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -48,27 +49,15 @@ func (article *Article) PostGet(s gorp.SqlExecutor) error {
 	user, _ := s.Get(User{}, article.UserID)
 	article.User = user.(*User)
 	var tagIds []string
-	_, err := s.Select(&tagIds, "select TagID from ArticleTag where ArticleID=?", article.ID)
-	if err != nil {
+	if _, err := s.Select(&tagIds, "select TagID from ArticleTag where ArticleID=?", article.ID); err != nil {
 		panic(err)
 	}
 	if len(tagIds) > 0 {
-		var tagListId []string
-		for _, tagId := range tagIds {
-			tagListId = append(tagListId, tagId)
+		if _, err := s.Select(&article.TagList, "select Name from Tag where ID in ("+strings.Join(tagIds, ",")+")"); err != nil {
+			panic(err)
 		}
-		for _, v := range tagListId {
-			tag, err := s.SelectStr("select Name from Tag where ID=?", v)
-			if err != nil {
-				if err != sql.ErrNoRows {
-					panic(err)
-				}
-				revel.TRACE.Println(err)
-			}
-			article.TagList = append(article.TagList, tag)
-		}
-
 	}
+
 	return nil
 }
 
@@ -105,7 +94,7 @@ func (article *Article) setTags(s gorp.SqlExecutor) {
 	var tags []Tag
 	var tag Tag
 	var TagList []string
-	for _, v := range article.TagList { // not supported 'in' https://github.com/go-gorp/gorp/issues/85
+	for _, v := range article.TagList {
 		err := s.SelectOne(&tag, "select * from Tag where Name=?", v)
 		if err != nil {
 			if err != sql.ErrNoRows {

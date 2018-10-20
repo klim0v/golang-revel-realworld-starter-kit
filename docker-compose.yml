@@ -1,6 +1,8 @@
 version: "3"
+
 services:
-  reverse-proxy:
+
+  proxy:
     image: traefik # The official Traefik docker image
     command: --api --docker # Enables the web UI and tells Traefik to listen to docker
     ports:
@@ -12,7 +14,7 @@ services:
   whoami:
     image: emilevauge/whoami # A container that exposes an API to show its IP address
     labels:
-    - traefik.frontend.rule=Host:test.local.wip
+    - traefik.frontend.rule=Host:test.${BASE_DOMAIN}
   go:
     build:
       context: .
@@ -20,7 +22,9 @@ services:
     command: revel run github.com/klim0v/golang-revel-realworld-starter-kit
     working_dir: /go
     labels:
-    - traefik.frontend.rule=Host:${BASE_DOMAIN}
+    - traefik.backend=realworld
+    - traefik.frontend.rule=Host:api.${BASE_DOMAIN}
+    - traefik.docker.network=proxy
     - traefik.port.rule=9000
     expose:
     - 9000
@@ -29,6 +33,18 @@ services:
     volumes:
     - ./:/go/src/github.com/klim0v/golang-revel-realworld-starter-kit
     links:
+    - db
+    depends_on:
+    - db
+
+  adminer:
+    image: adminer:4.6.3-standalone
+    labels:
+    - traefik.backend=adminer
+    - traefik.frontend.rule=Host:db-admin.${BASE_DOMAIN}
+    - traefik.docker.network=proxy
+    - traefik.port=8080
+    depends_on:
     - db
 
   db:
@@ -39,3 +55,5 @@ services:
     environment:
       MYSQL_DATABASE: database
       MYSQL_ROOT_PASSWORD: 123123
+    labels:
+    - traefik.enable=false

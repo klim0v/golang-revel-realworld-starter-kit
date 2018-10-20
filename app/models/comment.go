@@ -14,8 +14,8 @@ type Comment struct {
 	UpdatedAt time.Time
 
 	// Transient
-	User    User
-	Article Article
+	User    User    `db:"-"`
+	Article Article `db:"-"`
 }
 
 func (i *Comment) PreInsert(s gorp.SqlExecutor) error {

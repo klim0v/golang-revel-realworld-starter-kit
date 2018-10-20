@@ -20,8 +20,8 @@ type User struct {
 	HashedPassword []byte    `json:"-"`
 
 	// Transient
-	Token    string `json:"token,omitempty"`
-	Password string `json:"password,omitempty"`
+	Token    string `db:"-" json:"token,omitempty"`
+	Password string `db:"-" json:"password,omitempty"`
 }
 
 func (user *User) String() string {

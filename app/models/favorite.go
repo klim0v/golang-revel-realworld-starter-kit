@@ -6,6 +6,6 @@ type Favorite struct {
 	ArticleID int
 
 	// Transient
-	User    User
-	Article Article
+	User    User    `db:"-"`
+	Article Article `db:"-"`
 }

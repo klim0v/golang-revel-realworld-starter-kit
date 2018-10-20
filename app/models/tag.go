@@ -1,7 +1,12 @@
 package models
 
 type Tag struct {
-	ID            uint
-	Name          string
-	TaggingsCount uint
+	ID   int
+	Name string
+}
+
+type ArticleTag struct {
+	ID        int
+	ArticleID int
+	TagID     int
 }

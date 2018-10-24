@@ -21,22 +21,12 @@ func InitDB() {
 	Dbm = rgorp.Db.Map
 	Dbm.Dialect = &gorp.MySQLDialect{Engine: "InnoDB", Encoding: "UTF8"}
 
-	t := Dbm.AddTable(models.User{}).SetKeys(true, "ID")
-	t.ColMap("Password").Transient = true
-	t.ColMap("Token").Transient = true
-
-	t = Dbm.AddTable(models.Comment{}).SetKeys(true, "ID")
-	t.ColMap("User").Transient = true
-	t.ColMap("Article").Transient = true
-
-	t = Dbm.AddTable(models.Article{}).SetKeys(true, "ID")
-	t.ColMap("User").Transient = true
-
-	t = Dbm.AddTable(models.Favorite{}).SetKeys(true, "ID")
-	t.ColMap("User").Transient = true
-	t.ColMap("Article").Transient = true
-
-	t = Dbm.AddTable(models.Tag{}).SetKeys(true, "ID")
+	Dbm.AddTable(models.User{}).SetKeys(true, "ID")
+	Dbm.AddTable(models.Comment{}).SetKeys(true, "ID")
+	Dbm.AddTable(models.Article{}).SetKeys(true, "ID")
+	Dbm.AddTable(models.Favorite{}).SetKeys(true, "ID")
+	Dbm.AddTable(models.Tag{}).SetKeys(true, "ID")
+	Dbm.AddTable(models.ArticleTag{}).SetKeys(true, "ID")
 
 	rgorp.Db.TraceOn(revel.AppLog)
 }

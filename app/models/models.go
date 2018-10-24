@@ -1,7 +1,11 @@
 package models
 
+import "time"
+
 const (
-	EMPTY_MSG   string = "value is empty"
-	INVALID_MSG string = "value is invalid"
-	TAKEN_MSG   string = "value entered is taken"
+	EmptyMsg   string = "value is empty"
+	InvalidMsg string = "value is invalid"
+	TakenMsg   string = "value entered is taken"
+
+	TimeFormat = time.RFC3339
 )

@@ -91,7 +91,7 @@ func (t *UserControllerTest) TestLoginFail() {
 	tests := []testLogin{
 		{
 			errorKey: "email",
-			message:  models.EMPTY_MSG,
+			message:  models.EmptyMsg,
 			body: UserLoginBody{
 				UserLogin{
 					Email:    "",
@@ -101,7 +101,7 @@ func (t *UserControllerTest) TestLoginFail() {
 		},
 		{
 			errorKey: "password",
-			message:  models.EMPTY_MSG,
+			message:  models.EmptyMsg,
 			body: UserLoginBody{
 				UserLogin{
 					Email:    demoRegEmail,
@@ -115,7 +115,7 @@ func (t *UserControllerTest) TestLoginFail() {
 		jsonBody, _ := json.Marshal(test.body)
 
 		t.MakePostRequest(routes.UserController.Login(), bytes.NewBuffer(jsonBody), nil)
-		t.AssertStatus(422)
+		t.AssertStatus(http.StatusUnprocessableEntity)
 
 		var ErrorJSON = ErrorJSON{}
 		json.Unmarshal(t.ResponseBody, &ErrorJSON)
@@ -137,7 +137,7 @@ func (t *UserControllerTest) TestLoginFail() {
 	for _, errorKey := range errorKeys {
 		msg, ok := ErrorJSON.Errors[errorKey]
 		t.Assert(ok)
-		t.AssertEqual(models.EMPTY_MSG, msg[0])
+		t.AssertEqual(models.EmptyMsg, msg[0])
 	}
 }
 
@@ -153,7 +153,7 @@ func (t *UserControllerTest) TestRegistrationSuccessFully() {
 	jsonBody, _ := json.Marshal(bodyUser)
 
 	t.MakePostRequest(routes.UserController.Create(), bytes.NewBuffer(jsonBody), nil)
-	t.AssertOk()
+	t.AssertStatus(http.StatusCreated)
 
 	var UserJSON = controllers.UserJSON{}
 	json.Unmarshal(t.ResponseBody, &UserJSON)
@@ -168,7 +168,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 	tests := []testRegistration{
 		{
 			errorKey: "username",
-			message:  models.EMPTY_MSG,
+			message:  models.EmptyMsg,
 			body: UserRegistrationBody{
 				UserRegister{
 					Username: "",
@@ -179,7 +179,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 		},
 		{
 			errorKey: "email",
-			message:  models.EMPTY_MSG,
+			message:  models.EmptyMsg,
 			body: UserRegistrationBody{
 				UserRegister{
 					Username: demoRegUsername,
@@ -190,7 +190,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 		},
 		{
 			errorKey: "password",
-			message:  models.EMPTY_MSG,
+			message:  models.EmptyMsg,
 			body: UserRegistrationBody{
 				UserRegister{
 					Username: demoRegUsername,
@@ -205,7 +205,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 		jsonBody, _ := json.Marshal(test.body)
 
 		t.MakePostRequest(routes.UserController.Create(), bytes.NewBuffer(jsonBody), nil)
-		t.AssertStatus(422)
+		t.AssertStatus(http.StatusUnprocessableEntity)
 
 		var ErrorJSON = ErrorJSON{}
 		json.Unmarshal(t.ResponseBody, &ErrorJSON)
@@ -218,7 +218,7 @@ func (t *UserControllerTest) TestRegistrationFail() {
 	jsonBody, _ := json.Marshal(UserRegistrationBody{})
 
 	t.MakePostRequest(routes.UserController.Create(), bytes.NewBuffer(jsonBody), nil)
-	t.AssertStatus(422)
+	t.AssertStatus(http.StatusUnprocessableEntity)
 
 	var ErrorJSON = ErrorJSON{}
 	json.Unmarshal(t.ResponseBody, &ErrorJSON)
@@ -227,13 +227,13 @@ func (t *UserControllerTest) TestRegistrationFail() {
 	for _, errorKey := range errorKeys {
 		msg, ok := ErrorJSON.Errors[errorKey]
 		t.Assert(ok)
-		t.AssertEqual(models.EMPTY_MSG, msg[0])
+		t.AssertEqual(models.EmptyMsg, msg[0])
 	}
 }
 
 func (t *UserControllerTest) TestGetCurrentUserUnauthorized() {
 	t.Get(routes.UserController.Read())
-	t.AssertStatus(401)
+	t.AssertStatus(http.StatusUnauthorized)
 }
 
 func (t *UserControllerTest) TestGetCurrentUserSuccess() {
@@ -254,7 +254,7 @@ func (t *UserControllerTest) TestGetCurrentUserNotFound() {
 		"Authorization": []string{fmt.Sprintf("Token %v", JWT.NewToken(users[0].ID+999, ""))},
 	}
 	request.Send()
-	t.AssertStatus(401)
+	t.AssertStatus(http.StatusUnauthorized)
 }
 
 func (t *UserControllerTest) TestGetCurrentUserInvalidToken() {
@@ -265,14 +265,14 @@ func (t *UserControllerTest) TestGetCurrentUserInvalidToken() {
 		"Authorization": []string{fmt.Sprintf("Token %v", "invalid-token")},
 	}
 	request.Send()
-	t.AssertStatus(401)
+	t.AssertStatus(http.StatusUnauthorized)
 }
 
 func (t *UserControllerTest) TestUpdateUserFail() {
 	testUpdate := []testUpdate{
 		{
 			errorKey: "email",
-			message:  models.EMPTY_MSG,
+			message:  models.EmptyMsg,
 			body: UserUpdateBody{
 				UserUpdate{
 					Username: demoUsername,
@@ -282,7 +282,7 @@ func (t *UserControllerTest) TestUpdateUserFail() {
 		},
 		{
 			errorKey: "username",
-			message:  models.EMPTY_MSG,
+			message:  models.EmptyMsg,
 			body: UserUpdateBody{
 				UserUpdate{
 					Email:    demoRegEmail,
@@ -292,7 +292,7 @@ func (t *UserControllerTest) TestUpdateUserFail() {
 		},
 		{
 			errorKey: "email",
-			message:  models.TAKEN_MSG,
+			message:  models.TakenMsg,
 			body: UserUpdateBody{
 				UserUpdate{
 					Username: demoUsername,
@@ -303,7 +303,7 @@ func (t *UserControllerTest) TestUpdateUserFail() {
 		},
 		{
 			errorKey: "username",
-			message:  models.TAKEN_MSG,
+			message:  models.TakenMsg,
 			body: UserUpdateBody{
 				UserUpdate{
 					Username: users[1].Username,
@@ -331,7 +331,7 @@ func (t *UserControllerTest) TestUpdateUserFail() {
 	jsonBody, _ := json.Marshal(UserUpdateBody{})
 
 	t.MakePutRequest(routes.UserController.Update(), bytes.NewBuffer(jsonBody), header)
-	t.AssertStatus(422)
+	t.AssertStatus(http.StatusUnprocessableEntity)
 
 	var ErrorJSON = ErrorJSON{}
 	json.Unmarshal(t.ResponseBody, &ErrorJSON)
@@ -340,7 +340,7 @@ func (t *UserControllerTest) TestUpdateUserFail() {
 	for _, errorKey := range errorKeys {
 		msg, ok := ErrorJSON.Errors[errorKey]
 		t.Assert(ok)
-		t.AssertEqual(models.EMPTY_MSG, msg[0])
+		t.AssertEqual(models.EmptyMsg, msg[0])
 	}
 }
 

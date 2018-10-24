@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/klim0v/golang-revel-realworld-starter-kit/app/models"
 	"github.com/revel/revel"
 )
 
@@ -9,11 +10,11 @@ type CommentController struct {
 }
 
 type Comment struct {
-	ID        int    `json:"id"`
-	Body      string `json:"body"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
-	Author    Author `json:"author"`
+	ID        int         `json:"id"`
+	Body      string      `json:"body"`
+	CreatedAt string      `json:"createdAt"`
+	UpdatedAt string      `json:"updatedAt"`
+	Author    models.User `json:"author"`
 }
 
 type CommentJSON struct {
